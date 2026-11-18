@@ -49,6 +49,20 @@ for (const c of cands) {
   const prev = seen.get(r.yt);
   if (!prev || track.authors > prev.authors) seen.set(r.yt, track);
 }
+// The same song is often spelled several ways in comments ("Exit Music (For A Film)" / "Exit Music for a Film"), and
+// each spelling resolves to its own video. Keep the best-recommended copy and fold the others' evidence into it.
+const spelling = t => compact(t.artist.replace(/\b(\d+)\b/g, '$1')) + '|' + compact(t.title);
+const byName = new Map();
+for (const t of seen.values()) {
+  const k = spelling(t), prev = byName.get(k);
+  if (!prev) { byName.set(k, t); continue; }
+  const [keep, drop] = t.authors > prev.authors ? [t, prev] : [prev, t];
+  keep.authors += drop.authors; keep.threads += drop.threads; keep.score += drop.score;
+  keep.src = [...keep.src, ...drop.src.filter(x => !keep.src.some(y => y.tid === x.tid))].slice(0, 3);
+  byName.set(k, keep);
+}
+seen.clear();
+for (const t of byName.values()) seen.set(t.yt, t);
 const out = [...seen.values()]
   .sort((a, b) => (b.authors * 2 + b.threads + Math.log1p(b.score)) - (a.authors * 2 + a.threads + Math.log1p(a.score)))
   .slice(0, max);

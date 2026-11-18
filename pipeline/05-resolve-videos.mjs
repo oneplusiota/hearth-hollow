@@ -2,6 +2,7 @@
 // For each candidate: take any Reddit-linked video, else search YouTube; check oEmbed (200 = embeddable);
 // prefer the official channel / "Topic" upload and a plausible length. Resumable; results cached by song key.
 // Usage: node pipeline/05-resolve-videos.mjs [limit] [shard] [shards]
+import {readdir} from 'node:fs/promises';
 import {readJson, writeJson, sleep} from './lib.mjs';
 
 const dir = p => new URL(p, import.meta.url).pathname;
@@ -9,6 +10,9 @@ const limit = Number(process.argv[2]) || 1500, SHARD = Number(process.argv[3] ||
 const cands = (await readJson(dir('./data/candidates.json'), [])).slice(0, limit);
 const OUT = dir(`./data/resolved-${SHARD}.json`);
 const done = await readJson(OUT, {});
+// Skip anything any worker already resolved: candidate order shifts between harvests, so shards are not stable.
+const known = new Set(Object.keys(done));
+for (const f of (await readdir(dir('./data/'))).filter(f => /^resolved-.*\.json$/.test(f))) for (const k of Object.keys(await readJson(dir('./data/' + f), {}))) known.add(k);
 
 const key = c => `${c.artist}|${c.title}`.toLowerCase();
 const words = s => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\(.*?\)|\[.*?\]/g, ' ').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter(w => w.length > 1 && !['the', 'and', 'feat', 'ft'].includes(w));
@@ -59,7 +63,7 @@ function score(c, v) {
 
 let n = 0;
 const swapped = c => `${c.title}|${c.artist}`.toLowerCase();
-const mine = cands.filter((c, i) => i % SHARDS === SHARD && !done[key(c)] && !done[swapped(c)]);
+const mine = cands.filter((c, i) => i % SHARDS === SHARD && !known.has(key(c)) && !known.has(swapped(c)));
 console.log('to resolve:', mine.length);
 for (const c of mine) {
   const found = await search(`${c.artist} ${c.title}`);
