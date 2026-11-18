@@ -50,8 +50,8 @@ export default function Board({lib, player}: {lib: Library; player: PlayerState}
             <span className="n">{i + 1}</span><img loading="lazy" src={thumb(t.yt)} alt=""/>
             <span className="meta"><b>{t.title}</b><small>{t.artist}</small></span></button>
           <span className="proof" title={s.asks.join('\n')}>{s.threads > 1 ? `named in ${s.threads} threads` : 'named in 1 thread'}</span>
-          <button className="mini" onClick={() => player.addNext(playable(t))}>Next</button>
-          <button className={'mini ' + (lib.liked.has(t.id) ? 'on' : '')} aria-pressed={lib.liked.has(t.id)} aria-label={'Like ' + t.title} onClick={() => lib.toggleLike(t.id)}>{lib.liked.has(t.id) ? '♥' : '♡'}</button>
+          <button className="mini" onClick={() => player.addNext(playable(t))} aria-label={'Play ' + t.title + ' next'}><span className="mini-full">Next</span><span className="mini-short" aria-hidden>⤵</span></button>
+          <button className={'mini ' + (lib.liked.has(t.id) ? 'on' : '')} aria-pressed={lib.liked.has(t.id)} aria-label={(lib.liked.has(t.id) ? 'Unlike ' : 'Like ') + t.title} onClick={() => lib.toggleLike(t.id)}>{lib.liked.has(t.id) ? '♥' : '♡'}</button>
         </li>)}</ol>
         <h3>The questions behind it</h3>
         <ul className="threads">{result.matches.map(m => <li key={m.id}><a href={redditLink(m.id)} target="_blank" rel="noreferrer"><b>r/{m.sub}</b> · {m.ask} <em>{m.fit}% match · {m.n} replies ↗</em></a></li>)}</ul>
