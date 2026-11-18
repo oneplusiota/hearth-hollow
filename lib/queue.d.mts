@@ -7,6 +7,7 @@ export function toItem(track: Playable, key?: string): Item;
 export function enqueue(q: Queue, track: Playable): Queue;
 export function playNext(q: Queue, track: Playable): Queue;
 export function playNow(q: Queue, track: Playable): Queue;
+export function replace(tracks: Playable[]): Queue;
 export function jump(q: Queue, i: number): Queue;
 export function back(q: Queue): Queue;
 export function advance(q: Queue, opts?: {repeat?: boolean; failed?: Set<string>}): Queue | null;

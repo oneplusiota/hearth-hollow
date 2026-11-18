@@ -17,14 +17,24 @@ const words = s => new Set(s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,
 const overlap = (a, b) => { const B = words(b); let n = 0; for (const w of words(a)) if (B.has(w)) n++; return n / Math.max(1, words(a).size); };
 // "A - B" in a comment can be either order; the verified video decides. The artist is the half that matches the
 // channel or the text before the dash in the video title; ties keep the commenter's order.
+const compact = s => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+// Names that headline several different songs are almost certainly artists (Pink Floyd, Tool, Radiohead).
+const headliners = new Map();
+for (const c of cands) for (const name of new Set([compact(c.artist), compact(c.title)])) if (name) headliners.set(name, (headliners.get(name) || 0) + 1);
 function orient(c, r) {
-  const head = (r.ytTitle.split(/\s[-–—|]\s/)[0] || '') + ' ' + r.channel.replace(/ - Topic$|VEVO$|Official$/i, '');
-  const a = overlap(c.artist, head), t = overlap(c.title, head);
-  return t > a + .2 ? {artist: c.title, title: c.artist} : {artist: c.artist, title: c.title};
+  // Signals, strongest first: the uploader's channel, how often a name headlines other songs, the video title's lead.
+  const channel = r.channel.replace(/ - Topic$|VEVO$|Official$/i, '');
+  const head = r.ytTitle.split(/\s[-–—|~]\s/)[0] || '';
+  const inChannel = x => compact(channel).includes(compact(x)) && compact(x).length > 2 ? 1 : overlap(x, channel);
+  const seenAs = x => Math.min(1, Math.log2(headliners.get(compact(x)) || 1) / 4);
+  const score = x => inChannel(x) * 2 + seenAs(x) * 1.5 + overlap(x, head) * .3;
+  const a = score(c.artist), t = score(c.title);
+  return t > a + .25 ? {artist: c.title, title: c.artist} : {artist: c.artist, title: c.title};
 }
 const seen = new Map();
 for (const c of cands) {
-  const r = resolved[key(c)];
+  // The same song can be stored as "artist|title" or "title|artist" depending on which comment was seen first.
+  const r = resolved[key(c)] || resolved[key({artist: c.title, title: c.artist})];
   if (!r?.yt || r.match < 8) continue;
   if (JUNK.test(c.artist) || JUNK.test(c.title.replace(/[?!.)"']+$/, ''))) continue;
   const len = r.len ? r.len.split(':').reverse().reduce((s, p, i) => s + Number(p) * 60 ** i, 0) : 0;

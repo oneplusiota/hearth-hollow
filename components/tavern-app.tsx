@@ -7,10 +7,12 @@ import {presets} from '@/lib/soundscapes';
 import {SCENES, MOODS, sceneLabel, thumb, redditLink, type Track} from '@/lib/catalog-types';
 import Hearth from './hearth';
 import Signal from './signal';
+import Board from './board';
 
-type Room = 'common' | 'cellar' | 'hearth' | 'signal';
+type Room = 'common' | 'board' | 'cellar' | 'hearth' | 'signal';
 const ROOMS: {id: Room; label: string; icon: string; hint: string}[] = [
   {id: 'common', label: 'Common Room', icon: '♜', hint: 'Songs the regulars swear by'},
+  {id: 'board', label: 'Notice Board', icon: '✎', hint: 'Ask for an evening, get what Reddit answered'},
   {id: 'cellar', label: 'The Cellar', icon: '⚱', hint: 'Search every shelf'},
   {id: 'hearth', label: 'The Hearth', icon: '♨', hint: 'Sounds, always burning'},
   {id: 'signal', label: 'The Signal', icon: '◇', hint: 'A riddle in another tongue'},
@@ -116,6 +118,7 @@ export default function TavernApp() {
         {lib.loaded && !filtered.length && <p className="notice">The shelf is bare. Loosen a filter or clear the search.</p>}
       </section>}
 
+      {room === 'board' && <Board lib={lib} player={player}/>}
       {room === 'hearth' && <Hearth sound={sound} onBeforePlay={() => player.pause()}/>}
       {room === 'signal' && <Signal sound={sound} onBeforePlay={() => player.pause()}/>}
     </main>

@@ -58,7 +58,8 @@ function score(c, v) {
 }
 
 let n = 0;
-const mine = cands.filter((c, i) => i % SHARDS === SHARD && !done[key(c)]);
+const swapped = c => `${c.title}|${c.artist}`.toLowerCase();
+const mine = cands.filter((c, i) => i % SHARDS === SHARD && !done[key(c)] && !done[swapped(c)]);
 console.log('to resolve:', mine.length);
 for (const c of mine) {
   const found = await search(`${c.artist} ${c.title}`);

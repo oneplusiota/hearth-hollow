@@ -74,3 +74,10 @@ test('persisted queues drop malformed items and fix the pointer', () => {
   assert.equal(q.index, -1);
   assert.deepEqual(Q.clean(null), Q.emptyQueue());
 });
+
+test('replace makes the given tracks the whole queue, drops repeats and starts at the first', () => {
+  const q = Q.replace([t(1), t(2), t(2), t(3)]);
+  assert.equal(ids(q), 't1,t2,t3');
+  assert.equal(q.index, 0);
+  assert.deepEqual(Q.replace([]), Q.emptyQueue());
+});

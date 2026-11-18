@@ -119,6 +119,7 @@ export function usePlayer({onStart, onEnded, onPlay, onSkip}: {onStart: () => vo
 
   // --- public actions ------------------------------------------------------------------------------------
   const playNow = useCallback((track: Playable) => { void hold(); go(Q.playNow(q.current, track), {user: true}); }, [go]);
+  const playList = useCallback((tracks: Playable[]) => { void hold(); go(Q.replace(tracks), {user: true}); }, [go]);
   const addNext = useCallback((track: Playable) => { setQueue(Q.playNext(q.current, track)); setMessage('Added to play next.'); }, [setQueue]);
   const addLast = useCallback((track: Playable) => { setQueue(Q.enqueue(q.current, track)); setMessage('Added to the queue.'); }, [setQueue]);
   const jumpTo = useCallback((i: number) => { void hold(); go(Q.jump(q.current, i), {user: true}); }, [go]);
@@ -164,6 +165,6 @@ export function usePlayer({onStart, onEnded, onPlay, onSkip}: {onStart: () => vo
     show({title: now.title, artist: now.artist, art: thumb(now.yt)}, {play: resume, pause, next, prev}, playing);
   }, [now?.key, now?.title, playing, resume, pause, next, prev]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return {box, queue, now, playing, repeat, setRepeat, message, needsTap, failedIds, hydrated, playNow, addNext, addLast, jumpTo, next, prev, pause, resume, toggle, removeAt, moveBy, clearAll};
+  return {box, queue, now, playing, repeat, setRepeat, message, needsTap, failedIds, hydrated, playNow, playList, addNext, addLast, jumpTo, next, prev, pause, resume, toggle, removeAt, moveBy, clearAll};
 }
 export type PlayerState = ReturnType<typeof usePlayer>;

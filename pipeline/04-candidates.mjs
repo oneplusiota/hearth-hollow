@@ -3,6 +3,7 @@
 // Usage: node pipeline/04-candidates.mjs [minAuthors]
 import {readdir} from 'node:fs/promises';
 import {readJson, writeJson, youtubeIds} from './lib.mjs';
+import {clean, parseLine, pairKey} from './parse.mjs';
 
 const dir = p => new URL(p, import.meta.url).pathname;
 const minAuthors = Number(process.argv[2]) || 3;
@@ -15,23 +16,6 @@ for (const f of await readdir(dir('./data/'))) {
 }
 
 const BOT = /^(automoderator|\[deleted\]|.*bot)$/i;
-const clean = s => s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/https?:\/\/\S+/g, ' ').replace(/[*_~`>#]/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
-const norm = s => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/\b(feat|ft)\.?\b.*$/, '').replace(/^the /, '').replace(/[^a-z0-9]+/g, ' ').trim();
-const WORDS = s => s.split(/\s+/).length;
-// Sentence-y starts are chatter ("I love this - ..."), not names.
-const CHATTER = /^(i|i'm|im|it|its|it's|this|that|my|you|your|we|they|he|she|also|and|but|so|if|for|the best|try|check|listen|maybe|definitely|any|anything|some|just|what|how|why|yes|no|not|one|all|most|lots)\b/i;
-const good = s => s.length >= 2 && s.length <= 60 && WORDS(s) <= 8 && !CHATTER.test(s) && /[a-z0-9]/i.test(s) && !/[?!]{2,}/.test(s);
-
-function parseLine(line) {
-  const s = clean(line).replace(/^\d+[.)]\s*/, '').replace(/^[-•·]\s*/, '');
-  if (s.length < 5 || s.length > 140) return null;
-  let m;
-  if ((m = s.match(/^"([^"]{2,60})"\s+by\s+([^"(]{2,50})$/i))) return {artist: m[2].trim(), title: m[1].trim()};
-  if ((m = s.match(/^([^-–—:"]{2,50}?)\s+[-–—]\s+"?([^"]{2,60}?)"?$/))) return good(m[1].trim()) && good(m[2].trim()) ? {artist: m[1].trim(), title: m[2].trim()} : null;
-  if ((m = s.match(/^([^"]{2,60}?)\s+by\s+([A-Z][^"(]{1,50})$/))) return good(m[1].trim()) && good(m[2].trim()) ? {artist: m[2].trim(), title: m[1].trim()} : null;
-  return null;
-}
-
 const cand = new Map(); // key -> {artist,title,authors:Set,threads:Set,score,subs:Set,ctx:[]}
 let lines = 0, parsed = 0;
 for (const th of Object.values(threads)) {
@@ -46,9 +30,7 @@ for (const th of Object.values(threads)) {
       if (!p) continue;
       parsed++;
       // "A - B" may be artist-title or title-artist, so key on the sorted pair; the first-seen order is kept for display.
-      const pair = [norm(p.artist), norm(p.title)];
-      if (!pair[0] || !pair[1] || pair[0] === pair[1]) continue;
-      const key = [...pair].sort().join('|');
+      const key = pairKey(p.artist, p.title);
       if (key.length < 5) continue;
       const e = cand.get(key) ?? {artist: p.artist, title: p.title, authors: new Set(), threads: new Set(), score: 0, subs: new Set(), ctx: [], yt: new Set(), tids: new Set()};
       e.authors.add(c.author); e.threads.add(th.id); e.subs.add(th.sub); e.score += c.score;
