@@ -1,0 +1,17 @@
+export type Item = {key: string; id: string; yt: string; title: string; artist: string};
+export type Queue = {items: Item[]; index: number};
+type Playable = {id: string; yt: string; title?: string; artist?: string};
+export const MAX_ITEMS: number;
+export function emptyQueue(): Queue;
+export function toItem(track: Playable, key?: string): Item;
+export function enqueue(q: Queue, track: Playable): Queue;
+export function playNext(q: Queue, track: Playable): Queue;
+export function playNow(q: Queue, track: Playable): Queue;
+export function jump(q: Queue, i: number): Queue;
+export function back(q: Queue): Queue;
+export function advance(q: Queue, opts?: {repeat?: boolean; failed?: Set<string>}): Queue | null;
+export function remove(q: Queue, i: number): Queue;
+export function move(q: Queue, i: number, d: number): Queue;
+export function clear(): Queue;
+export function current(q: Queue): Item | null;
+export function clean(raw: unknown): Queue;

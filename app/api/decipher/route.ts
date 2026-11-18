@@ -1,0 +1,2 @@
+import { checkSignal } from '@/lib/signal-private';
+export async function POST(request:Request){try{const raw=await request.text();if(raw.length>512)return Response.json({error:'Keep your answer under 160 characters.'},{status:413});const {id,guess}=JSON.parse(raw);if(!Number.isInteger(id)||id<0||id>5||typeof guess!=='string'||guess.length>160)return Response.json({error:'Invalid answer'},{status:400});return Response.json({correct:checkSignal(id,guess)},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Invalid request'},{status:400});}}

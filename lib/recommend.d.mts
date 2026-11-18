@@ -1,0 +1,10 @@
+export type Rated = {id: string; title?: string; artist?: string; why?: string; mood?: string[]; scenes?: string[]; genres?: string[]; similar?: string[]; energy?: number; vocals?: string; authors?: number; threads?: number};
+export type Event = {id: string; kind: 'like' | 'play' | 'skip'};
+export function features(track: Rated): Map<string, number>;
+export function taste(events: Event[], byId: Map<string, Rated>): Map<string, number>;
+export function prior(track: Rated): number;
+export function cosine(a: Map<string, number>, b: Map<string, number>): number;
+export function forYou<T extends Rated>(tracks: T[], events: Event[], opts?: {limit?: number; explore?: number; exclude?: Set<string>; random?: () => number}): T[];
+export function similarTo<T extends Rated>(track: Rated, tracks: T[], limit?: number): T[];
+export function autoplayNext<T extends Rated>(track: Rated, tracks: T[], recent?: string[]): T | null;
+export function search<T extends Rated>(tracks: T[], query: string): T[];

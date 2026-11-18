@@ -1,0 +1,27 @@
+import type { Preset } from './soundscapes';
+let silent='';
+function silence(){if(silent)return silent;const rate=8000,n=rate,b=new Uint8Array(44+n),v=new DataView(b.buffer),w=(o:number,t:string)=>{for(let i=0;i<t.length;i++)b[o+i]=t.charCodeAt(i);};w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);b.fill(128,44);silent=URL.createObjectURL(new Blob([b],{type:'audio/wav'}));return silent;}
+export class SoundEngine {
+ private ctx:AudioContext|null=null;private node:AudioWorkletNode|null=null;private tavern:AudioWorkletNode|null=null;private master:GainNode|null=null;private tavernGain:GainNode|null=null;private stopped=false;private intended=false;private mode:Preset='brown';private volume=45;private drift=.3;private timer=0;private syllables:string[]=[];private el:HTMLAudioElement|null=null;
+ constructor(private onStopped:(reason:string)=>void){}
+ async start(){
+  if(this.stopped)throw Error('Audio engine has closed.');
+  if(!this.ctx){const c=new AudioContext();this.ctx=c;await c.resume();await Promise.all([c.audioWorklet.addModule('/soundscape-worklet.js'),c.audioWorklet.addModule('/music-worklet.js')]);if(this.stopped)return;
+   this.node=new AudioWorkletNode(c,'soundscape',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});this.tavern=new AudioWorkletNode(c,'tavern',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});this.master=c.createGain();this.master.gain.value=0;this.tavernGain=c.createGain();this.tavernGain.gain.value=0;
+   const limit=c.createDynamicsCompressor();limit.threshold.value=-16;limit.ratio.value=8;this.node.connect(this.master);this.tavern.connect(this.tavernGain);this.tavernGain.connect(this.master);
+   const rev=c.createConvolver(),length=Math.floor(c.sampleRate*2.5),buf=c.createBuffer(2,length,c.sampleRate);for(let j=0;j<2;j++){const a=buf.getChannelData(j);for(let i=0;i<length;i++)a[i]=(Math.random()*2-1)*(1-i/length)**3*.25;}rev.buffer=buf;const wet=c.createGain();wet.gain.value=.18;this.node.connect(rev);this.tavernGain.connect(rev);rev.connect(wet);wet.connect(this.master);this.master.connect(limit);limit.connect(c.destination);
+   // The sound goes straight to the speakers (a MediaStream route glitched). A silent looping media element sits beside it only so the OS grants and revokes audio focus: when another app plays, the element is paused and we pause too.
+   const el=new Audio(silence());el.loop=true;this.el=el;
+   el.onpause=()=>{if(this.intended&&!this.stopped){this.intended=false;void this.pause();this.onStopped('Paused because another app started playing audio. Press play to resume.');}};el.onplay=()=>{if(!this.intended)el.pause();};
+   this.node.port.onmessage=e=>{if(e.data.ended){void this.pause();this.onStopped('Your session has faded out.');}};
+   const failure=()=>{void this.dispose();this.onStopped('Audio interrupted. Press play to restart.');};this.node.onprocessorerror=failure;this.tavern.onprocessorerror=failure;
+   c.onstatechange=()=>{if(this.intended&&c.state!=='running'){this.intended=false;this.onStopped('Your browser paused audio. Press play to resume.');}};
+  }
+  if(this.stopped)return;await this.ctx.resume();this.intended=true;await this.el?.play();this.configure(this.mode,this.volume,this.drift);this.setSyllables(this.syllables);this.setTimer(this.timer);
+ }
+ configure(mode:Preset,volume:number,drift:number){this.mode=mode;this.volume=Math.max(0,Math.min(volume,100));this.drift=Math.max(0,Math.min(drift,1));if(!this.ctx||this.stopped)return;this.node?.port.postMessage({mode,drift:this.drift});this.master?.gain.setTargetAtTime((this.volume/100)**1.4,this.ctx.currentTime,.1);this.tavernGain?.gain.setTargetAtTime(mode==='tavern'?.8:0,this.ctx.currentTime,.5);}
+ setSyllables(syllables:string[]){this.syllables=syllables;this.node?.port.postMessage({syllables});}
+ setTimer(minutes:number){this.timer=minutes;this.node?.port.postMessage({timer:minutes});if(this.tavernGain&&this.ctx){const t=this.ctx.currentTime;this.tavernGain.gain.cancelScheduledValues(t);this.tavernGain.gain.setTargetAtTime(this.mode==='tavern'?.8:0,t,.5);if(minutes>0){this.tavernGain.gain.setTargetAtTime(0,t+minutes*60-8,1.5);}}}
+ async pause(){this.intended=false;if(!this.ctx||this.stopped)return;this.master?.gain.setTargetAtTime(0,this.ctx.currentTime,.06);await new Promise(r=>setTimeout(r,250));if(!this.stopped){this.el?.pause();await this.ctx.suspend();}}
+ async dispose(){this.stopped=true;this.intended=false;if(this.el){this.el.onpause=null;this.el.onplay=null;this.el.pause();this.el.removeAttribute('src');this.el.load();this.el=null;}for(const n of [this.node,this.tavern]){if(n){n.port.onmessage=null;n.port.close();n.disconnect();}}if(this.ctx){this.ctx.onstatechange=null;if(this.ctx.state!=='closed')await this.ctx.close();}this.ctx=null;}
+}
