@@ -8,4 +8,4 @@ export const presets = [
   {id: 'tavern', name: 'The Old Inn', kind: 'Generative tavern', caption: 'Our original wandering melody.', icon: '♪', hue: 38},
   {id: 'pulse', name: 'Midnight Ride', kind: 'Generative pulse', caption: 'A steady electronic stride.', icon: '✦', hue: 305},
 ] as const;
-export type Preset = typeof presets[number]['id'] | 'signal';
+export type Preset = typeof presets[number]['id'] | 'signal' | 'band';

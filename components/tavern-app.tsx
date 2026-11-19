@@ -4,6 +4,7 @@ import {useLibrary} from '@/lib/use-library';
 import {usePlayer} from '@/lib/use-player';
 import {useSoundscape} from '@/lib/use-soundscape';
 import {presets} from '@/lib/soundscapes';
+import {genreById} from '@/lib/genres.mjs';
 import {SCENES, MOODS, sceneLabel, thumb, redditLink, type Track} from '@/lib/catalog-types';
 import Hearth from './hearth';
 import Signal from './signal';
@@ -127,7 +128,7 @@ export default function TavernApp() {
       <button className="bar-open" disabled={!player.now} aria-expanded={showVideo} aria-controls="video-sheet" aria-label={showVideo ? 'Hide the video' : 'Show the video'} onClick={toggleVideo}>
         <span className="bar-art" aria-hidden>{player.now ? <img src={thumb(player.now.yt)} alt=""/> : <span>♪</span>}<i>{showVideo ? '▾' : '▴'}</i></span>
         <span className="bar-info">
-          <b>{player.now ? player.now.title : sound.playing ? presets.find(p => p.id === sound.mode)?.name ?? 'The Signal' : 'Nothing playing'}</b>
+          <b>{player.now ? player.now.title : sound.playing ? (sound.mode === 'band' ? genreById(sound.genre).name : presets.find(p => p.id === sound.mode)?.name ?? 'The Signal') : 'Nothing playing'}</b>
           <small>{player.needsTap ? 'Tap play in the video to start' : player.now ? player.now.artist || 'from the shelves' : sound.playing ? sound.status : 'Choose a song, or light the hearth'}</small>
         </span>
       </button>

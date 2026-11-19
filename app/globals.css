@@ -216,3 +216,32 @@ textarea{min-height:130px;resize:vertical}
 }
 @media (max-width:520px){.inn{padding-bottom:calc(150px + env(safe-area-inset-bottom))}.card-actions .who{margin-left:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+/* The Hearth band */
+.roll{position:absolute;left:0;right:0;top:0;width:100%;height:55%;pointer-events:none;opacity:.9}
+.genres{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.genre{display:flex;gap:12px;align-items:flex-start;text-align:left;padding:14px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(var(--plank),var(--oak2))}
+.genre i{font-style:normal;font-size:26px;color:hsl(var(--hue) 70% 62%);width:34px;text-align:center;flex:none}
+.genre b{display:block;font:600 14px var(--display);letter-spacing:.04em}
+.genre small{display:block;color:var(--dim);font-size:14px;line-height:1.3;margin-top:2px}
+.genre:hover{border-color:hsl(var(--hue) 60% 50%)}
+.genre.on{border-color:var(--brass);background:linear-gradient(#3d2a18,#2a1c10);box-shadow:0 0 20px hsl(var(--hue) 70% 50%/.25)}
+.sub .mini{margin-left:12px;vertical-align:middle;font-size:13px}
+.rack{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.slot{display:grid;gap:10px;align-content:start;padding:14px;border:1px solid var(--line);border-top:3px solid hsl(var(--hue) 70% 55%);border-radius:12px;background:linear-gradient(var(--plank),var(--oak2))}
+.slot.off{opacity:.55}
+.slot-head{display:flex;align-items:center;gap:8px}
+.slot-head i{font-style:normal;color:hsl(var(--hue) 70% 62%)}
+.slot-head b{font:600 15px var(--display);letter-spacing:.04em;margin-right:auto}
+.slot-head .chip{padding:3px 10px;font-size:13px}
+.slot label,.fate label{display:grid;gap:5px;font:600 11px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.slot select{width:100%}
+.fate{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:8px}
+.law{padding:14px;border:1px solid var(--line);border-radius:12px;background:#0003}
+.law h3{font-size:16px;margin-bottom:4px}
+.law .chips{margin:8px 0}
+.law .chip{text-transform:none;font-size:14px;padding:5px 11px}
+.fate-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.fate-actions small{color:var(--dim);margin-left:6px}
+.fate-actions .code{flex:1;min-width:180px;background:#0006;border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.dials .mini{margin-top:0}
